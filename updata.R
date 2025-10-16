@@ -10831,3 +10831,669 @@ legend(3, 100, bty="n", cex=0.7, x.intersp= 0.1, y.intersp=1,
        legend=rev(PHYLA_label_cols_B$labels), 
        fill=rev(PHYLA_label_cols_B$cols), 
        border=rev(PHYLA_label_cols_B$cols) )
+
+
+
+
+#####  Calculate NTI #####
+library(ape)
+library(picante)
+library(NST)
+library(Rcpp)
+
+
+## Bacteria
+B_tree <- read.tree('B_tree.nwk')
+B_tree_node <- B_tree[["tip.label"]]
+cp_otu_B_tree <- cp_otu_B[c(B_tree_node),]
+B_tree <- prune.sample(t(cp_otu_B_tree), B_tree)
+
+## PD
+B_comm <- as.matrix(t(cp_otu_B_tree))
+B_pd <- pd(B_comm, B_tree,include.root=FALSE)
+design_B$pd <- B_pd$PD
+
+my_comparisons = list( c('CK', 'PE'), c("CK", "DE"), c("PE", "DE"))
+
+CK  <- design_B[design_B$Treatment1=="CK", 13 ]
+PE  <- design_B[design_B$Treatment1=="PE", 13 ]
+DE  <- design_B[design_B$Treatment1=="DE", 13 ]
+
+pd_B <- ggplot(design_B, aes(x=factor(Treatment1,levels = c("CK","PE","DE")), y=pd, fill =Treatment1))+geom_violin(trim=FALSE,color="white") +
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.5) +
+  scale_fill_manual(values=c("#DAA520","#3CB371","gray30"))+
+  geom_jitter( position=position_jitter(0.17), size=1, alpha=0.7)+
+  theme_bw()+
+  theme(panel.grid.major =element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank())+labs(x="Type", y="Bacteria pd index")+
+  stat_compare_means(comparisons = my_comparisons,
+                     label = "p.signif",
+                     method = "t.test")
+
+
+
+set.seed(619)
+B_pnst <- pNST(comm = t(cp_otu_B_tree), tree = B_tree, group = design_B, phylo.shuffle = TRUE, taxo.null.model = NULL,pd.wd = tempdir(), abundance.weighted = TRUE, rand = 1000, nworker = 4, SES = TRUE, RC = FALSE)
+
+B_betaMNTD <- B_pnst$index.pair
+head(B_betaMNTD)
+write.csv(B_betaMNTD,"B_betaMNTD.csv")
+
+## Fungi
+F_tree <- read.tree('F_otus.nwk')
+
+F_tree_node <- F_tree[["tip.label"]]
+a <- setdiff(F_tree_node,rownames(cp_otu_F))
+F_tree<- drop.tip(F_tree,a)
+
+F_tree1 <- prune.sample(t(cp_otu_F), F_tree)
+
+## PD
+F_comm <- as.matrix(t(cp_otu_F))
+F_pd <- pd(F_comm, F_tree,include.root=FALSE)
+design_F$pd <- F_pd$PD
+
+my_comparisons = list( c('CK', 'PE'), c("CK", "DE"), c("PE", "DE"))
+
+CK  <- design_F[design_F$Treatment1=="CK", 13 ]
+PE  <- design_F[design_F$Treatment1=="PE", 13 ]
+DE  <- design_F[design_F$Treatment1=="DE", 13 ]
+
+pd_F <- ggplot(design_F, aes(x=factor(Treatment1,levels = c("CK","PE","DE")), y=pd, fill =Treatment1))+geom_violin(trim=FALSE,color="white") +
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.5) +
+  scale_fill_manual(values=c("#DAA520","#3CB371","gray30"))+
+  geom_jitter( position=position_jitter(0.17), size=1, alpha=0.7)+
+  theme_bw()+
+  theme(panel.grid.major =element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank())+labs(x="Type", y="Fungi pd index")+
+  stat_compare_means(comparisons = my_comparisons,
+                     label = "p.signif",
+                     method = "t.test")
+
+set.seed(619)
+F_pnst <- pNST(comm = t(cp_otu_F), tree = F_tree1, group = design_F, phylo.shuffle = TRUE, taxo.null.model = NULL,pd.wd = tempdir(), abundance.weighted = TRUE, rand = 1000, nworker = 4, SES = TRUE, RC = FALSE)
+
+F_betaMNTD <- F_pnst$index.pair
+head(F_betaMNTD)
+write.csv(F_betaMNTD,"F_betaMNTD.csv")
+
+
+## Protist
+P_tree <- read.tree('P_otus.nwk')
+P_tree_node <- P_tree[["tip.label"]]
+cp_otu_P_tree <- cp_otu_P[c(P_tree_node),]
+P_tree <- prune.sample(t(cp_otu_P_tree), P_tree)
+
+## PD
+P_comm <- as.matrix(t(cp_otu_P_tree))
+P_pd <- pd(P_comm, P_tree,include.root=FALSE)
+design_P$pd <- P_pd$PD
+
+my_comparisons = list( c('CK', 'PE'), c("CK", "DE"), c("PE", "DE"))
+
+CK  <- design_P[design_P$Treatment1=="CK", 13 ]
+PE  <- design_P[design_P$Treatment1=="PE", 13 ]
+DE  <- design_P[design_P$Treatment1=="DE", 13 ]
+
+pd_P <- ggplot(design_P, aes(x=factor(Treatment1,levels = c("CK","PE","DE")), y=pd, fill =Treatment1))+geom_violin(trim=FALSE,color="white") +
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.5) +
+  scale_fill_manual(values=c("#DAA520","#3CB371","gray30"))+
+  geom_jitter( position=position_jitter(0.17), size=1, alpha=0.7)+
+  theme_bw()+
+  theme(panel.grid.major =element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank())+labs(x="Type", y="Protist pd index")+
+  stat_compare_means(comparisons = my_comparisons,
+                     label = "p.signif",
+                     method = "t.test")
+
+grid.newpage()
+grid.arrange(pd_B,pd_F,pd_P,nrow = 1)
+
+
+##### lefse #####
+library(microeco)
+library(dplyr)
+library(tidyverse)
+library(magrittr)
+
+
+## Bacteria all
+keep_cp_otu_B <- which(rowSums(cp_otu_B) > 0)
+cp_otu_B <- cp_otu_B[keep_cp_otu_B,]
+
+nrow(cp_otu_B)
+
+tax_B <- tax_B[rownames(cp_otu_B),]
+tax_B$otu <- rownames(tax_B)
+
+B_dataset <- microtable$new(sample_table = design_B,
+                                 otu_table = cp_otu_B, 
+                                 tax_table = tax_B)
+
+
+B_lefse <- trans_diff$new(dataset = B_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", 
+                               alpha = 0.05, taxa_level = "otu",
+                               lefse_subgroup = NULL,
+                               p_adjust_method = "none")
+
+B_lefse_plot <- B_lefse$plot_diff_bar(use_number = 1:30, 
+                                                width = 0.8, heatmap_y = "Taxa",
+                                                group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() + 
+  ggsci::scale_fill_npg()
+
+
+## Fungi all
+keep_cp_otu_F <- which(rowSums(cp_otu_F) > 0)
+cp_otu_F <- cp_otu_F[keep_cp_otu_F,]
+
+nrow(cp_otu_F)
+
+tax_F <- tax_F[rownames(cp_otu_F),]
+tax_F$otu <- rownames(tax_F)
+
+F_dataset <- microtable$new(sample_table = design_F,
+                            otu_table = cp_otu_F, 
+                            tax_table = tax_F)
+
+
+F_lefse <- trans_diff$new(dataset = F_dataset, 
+                          method = "lefse", 
+                          group = "Treatment1", 
+                          alpha = 0.05, taxa_level = "otu",
+                          lefse_subgroup = NULL,
+                          p_adjust_method = "none")
+
+F_lefse_plot <- F_lefse$plot_diff_bar(use_number = 1:30, 
+                                      width = 0.8, heatmap_y = "Taxa",
+                                      group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() + 
+  ggsci::scale_fill_npg()
+
+
+## Protist all
+keep_cp_otu_P <- which(rowSums(cp_otu_P) > 0)
+cp_otu_P <- cp_otu_P[keep_cp_otu_P,]
+
+nrow(cp_otu_P)
+
+tax_P <- tax_P[rownames(cp_otu_P),]
+tax_P$otu <- rownames(tax_P)
+
+design_P <- droplevels(design_P[soilsamples,])
+
+P_dataset <- microtable$new(sample_table = design_P,
+                            otu_table = cp_otu_P, 
+                            tax_table = tax_P)
+
+
+P_lefse <- trans_diff$new(dataset = P_dataset, 
+                          method = "lefse", 
+                          group = "Treatment1", 
+                          alpha = 0.05, taxa_level = "otu",
+                          lefse_subgroup = NULL,
+                          p_adjust_method = "none")
+
+P_lefse_plot <- P_lefse$plot_diff_bar(use_number = 1:30, 
+                                      width = 0.8, heatmap_y = "Taxa",
+                                      group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() + 
+  ggsci::scale_fill_npg()
+
+
+grid.newpage()
+grid.arrange(B_lefse_plot,F_lefse_plot,P_lefse_plot,nrow = 1)
+
+
+
+## cladogram
+# bacteria
+B_cladogram_ASV <- c(B_lefse[["plot_diff_bar_taxa"]])
+cp_otu_B_cladogram <- cp_otu_B[B_cladogram_ASV,]
+
+
+PE <- rownames(design_B[design_B$Treatment1=="PE",])
+DE <- rownames(design_B[design_B$Treatment1=="DE",])
+CK <- rownames(design_B[design_B$Treatment1=="CK",])
+
+
+B_cladogram_ASV_tab <-as.matrix(cbind(`CK`=apply(cp_otu_B_cladogram[,CK],1,sum),
+                                      `PE`=apply(cp_otu_B_cladogram[,PE],1,sum),
+                                      `DE`=apply(cp_otu_B_cladogram[,DE],1,sum)))
+
+B_cladogram_ASV_tax <- tax_B[B_cladogram_ASV,]
+
+## fungi
+F_cladogram_ASV <- c(F_lefse[["plot_diff_bar_taxa"]])
+cp_otu_F_cladogram <- cp_otu_F[F_cladogram_ASV,]
+
+
+PE <- rownames(design_F[design_F$Treatment1=="PE",])
+DE <- rownames(design_F[design_F$Treatment1=="DE",])
+CK <- rownames(design_F[design_F$Treatment1=="CK",])
+
+
+F_cladogram_ASV_tab <-as.matrix(cbind(`CK`=apply(cp_otu_F_cladogram[,CK],1,sum),
+                                      `PE`=apply(cp_otu_F_cladogram[,PE],1,sum),
+                                      `DE`=apply(cp_otu_F_cladogram[,DE],1,sum)))
+
+F_cladogram_ASV_tax <- tax_F[F_cladogram_ASV,]
+
+
+## protist
+P_cladogram_ASV <- c(P_lefse[["plot_diff_bar_taxa"]])
+cp_otu_P_cladogram <- cp_otu_P[P_cladogram_ASV,]
+
+
+PE <- rownames(design_P[design_P$Treatment1=="PE",])
+DE <- rownames(design_P[design_P$Treatment1=="DE",])
+CK <- rownames(design_P[design_P$Treatment1=="CK",])
+
+
+P_cladogram_ASV_tab <-as.matrix(cbind(`CK`=apply(cp_otu_P_cladogram[,CK],1,sum),
+                                      `PE`=apply(cp_otu_P_cladogram[,PE],1,sum),
+                                      `DE`=apply(cp_otu_P_cladogram[,DE],1,sum)))
+
+P_cladogram_ASV_tax <- tax_P[P_cladogram_ASV,]
+
+
+
+## Bacteria soil
+cp_otu_B_soil <- cp_otu_B[,soilsamples]
+
+keep_cp_otu_B_soil <- which(rowSums(cp_otu_B_soil) > 0)
+cp_otu_B_soil <- cp_otu_B_soil[keep_cp_otu_B_soil,]
+
+nrow(cp_otu_B_soil)
+
+tax_B_soil <- tax_B[rownames(cp_otu_B_soil),]
+tax_B_soil$otu <- rownames(tax_B_soil)
+
+design_B_soil <- droplevels(design_B[soilsamples,])
+
+B_soil_dataset <- microtable$new(sample_table = design_B_soil,
+                          otu_table = cp_otu_B_soil, 
+                          tax_table = tax_B_soil)
+
+
+B_soil_lefse <- trans_diff$new(dataset = B_soil_dataset, 
+                        method = "lefse", 
+                        group = "Treatment1", 
+                        alpha = 0.05, taxa_level = "otu",
+                        lefse_subgroup = NULL,
+                        p_adjust_method = "none")
+
+B_soil_lefse_plot <- B_soil_lefse$plot_diff_bar(use_number = 1:30, 
+                    width = 0.8, heatmap_y = "Taxa",
+                    group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() + 
+  ggsci::scale_fill_npg()
+
+
+
+## Bacteria root
+cp_otu_B_root <- cp_otu_B[,rootsamples]
+
+keep_cp_otu_B_root <- which(rowSums(cp_otu_B_root) > 0)
+cp_otu_B_root <- cp_otu_B_root[keep_cp_otu_B_root,]
+
+nrow(cp_otu_B_root)
+
+tax_B_root <- tax_B[rownames(cp_otu_B_root),]
+tax_B_root$otu <- rownames(tax_B_root)
+
+design_B_root <- droplevels(design_B[rootsamples,])
+
+B_root_dataset <- microtable$new(sample_table = design_B_root,
+                                 otu_table = cp_otu_B_root, 
+                                 tax_table = tax_B_root)
+
+
+B_root_lefse <- trans_diff$new(dataset = B_root_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", taxa_level = "otu",
+                               alpha = 0.01, 
+                               lefse_subgroup = NULL,
+                               p_adjust_method = "none")
+
+B_root_lefse_plot <- B_root_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Bacteria end
+cp_otu_B_end <- cp_otu_B[,endsamples]
+
+keep_cp_otu_B_end <- which(rowSums(cp_otu_B_end) > 0)
+cp_otu_B_end <- cp_otu_B_end[keep_cp_otu_B_end,]
+
+nrow(cp_otu_B_end)
+
+tax_B_end <- tax_B[rownames(cp_otu_B_end),]
+tax_B_end$otu <- rownames(tax_B_end)
+
+design_B_end <- droplevels(design_B[endsamples,])
+
+B_end_dataset <- microtable$new(sample_table = design_B_end,
+                                 otu_table = cp_otu_B_end, 
+                                 tax_table = tax_B_end)
+
+
+B_end_lefse <- trans_diff$new(dataset = B_end_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", taxa_level = "otu",
+                               alpha = 0.05, 
+                               lefse_subgroup = NULL,
+                              p_adjust_method = "none")
+
+B_end_lefse_plot <- B_end_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Bacteria film
+cp_otu_B_film <- cp_otu_B[,particlesamples]
+
+keep_cp_otu_B_film <- which(rowSums(cp_otu_B_film) > 0)
+cp_otu_B_film <- cp_otu_B_film[keep_cp_otu_B_film,]
+
+nrow(cp_otu_B_film)
+
+tax_B_film <- tax_B[rownames(cp_otu_B_film),]
+tax_B_film$otu <- rownames(tax_B_film)
+
+design_B_film <- droplevels(design_B[particlesamples,])
+
+B_film_dataset <- microtable$new(sample_table = design_B_film,
+                                 otu_table = cp_otu_B_film, 
+                                 tax_table = tax_B_film)
+
+
+B_film_lefse <- trans_diff$new(dataset = B_film_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", 
+                               alpha = 0.05, taxa_level = "otu",
+                               lefse_subgroup = NULL)
+
+B_film_lefse_plot <- B_film_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+## Fungi soil
+cp_otu_F_soil <- cp_otu_F[,soilsamples]
+
+keep_cp_otu_F_soil <- which(rowSums(cp_otu_F_soil) > 0)
+cp_otu_F_soil <- cp_otu_F_soil[keep_cp_otu_F_soil,]
+
+nrow(cp_otu_F_soil)
+
+tax_F_soil <- tax_F[rownames(cp_otu_F_soil),]
+tax_F_soil$otu <- rownames(tax_F_soil)
+
+design_F_soil <- droplevels(design_F[soilsamples,])
+
+F_soil_dataset <- microtable$new(sample_table = design_F_soil,
+                                 otu_table = cp_otu_F_soil, 
+                                 tax_table = tax_F_soil)
+
+
+F_soil_lefse <- trans_diff$new(dataset = F_soil_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", taxa_level = "otu",
+                               alpha = 0.05, 
+                               lefse_subgroup = NULL,
+                               p_adjust_method = "none")
+
+F_soil_lefse_plot <- F_soil_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Bacteria root
+cp_otu_F_root <- cp_otu_F[,rootsamples]
+
+keep_cp_otu_F_root <- which(rowSums(cp_otu_F_root) > 0)
+cp_otu_F_root <- cp_otu_F_root[keep_cp_otu_F_root,]
+
+nrow(cp_otu_F_root)
+
+tax_F_root <- tax_F[rownames(cp_otu_F_root),]
+tax_F_root$otu <- rownames(tax_F_root)
+
+design_F_root <- droplevels(design_F[rootsamples,])
+
+F_root_dataset <- microtable$new(sample_table = design_F_root,
+                                 otu_table = cp_otu_F_root, 
+                                 tax_table = tax_F_root)
+
+
+F_root_lefse <- trans_diff$new(dataset = F_root_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", 
+                               alpha = 0.01, taxa_level = "otu",
+                               lefse_subgroup = NULL,
+                               p_adjust_method = "none")
+
+F_root_lefse_plot <- F_root_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Bacteria end
+cp_otu_F_end <- cp_otu_F[,endsamples]
+
+keep_cp_otu_F_end <- which(rowSums(cp_otu_F_end) > 0)
+cp_otu_F_end <- cp_otu_F_end[keep_cp_otu_F_end,]
+
+nrow(cp_otu_F_end)
+
+tax_F_end <- tax_F[rownames(cp_otu_F_end),]
+tax_F_end$otu <- rownames(tax_F_end)
+
+design_F_end <- droplevels(design_F[endsamples,])
+
+F_end_dataset <- microtable$new(sample_table = design_F_end,
+                                otu_table = cp_otu_F_end, 
+                                tax_table = tax_F_end)
+
+
+F_end_lefse <- trans_diff$new(dataset = F_end_dataset, 
+                              method = "lefse", 
+                              group = "Treatment1", taxa_level = "otu",
+                              alpha = 0.05, 
+                              lefse_subgroup = NULL,
+                              p_adjust_method = "none")
+
+F_end_lefse_plot <- F_end_lefse$plot_diff_bar(use_number = 1:30, 
+                          width = 0.8, 
+                          group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Bacteria film
+cp_otu_F_film <- cp_otu_F[,particlesamples]
+
+keep_cp_otu_F_film <- which(rowSums(cp_otu_F_film) > 0)
+cp_otu_F_film <- cp_otu_F_film[keep_cp_otu_F_film,]
+
+nrow(cp_otu_F_film)
+
+tax_F_film <- tax_F[rownames(cp_otu_F_film),]
+tax_F_film$otu <- rownames(tax_F_film)
+
+design_F_film <- droplevels(design_F[particlesamples,])
+
+F_film_dataset <- microtable$new(sample_table = design_F_film,
+                                 otu_table = cp_otu_F_film, 
+                                 tax_table = tax_F_film)
+
+
+F_film_lefse <- trans_diff$new(dataset = F_film_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", taxa_level = "otu",
+                               alpha = 0.05, 
+                               lefse_subgroup = NULL)
+
+F_film_lefse_plot <- F_film_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Protist soil
+cp_otu_P_soil <- cp_otu_P[,psoilsamples]
+
+keep_cp_otu_P_soil <- which(rowSums(cp_otu_P_soil) > 0)
+cp_otu_P_soil <- cp_otu_P_soil[keep_cp_otu_P_soil,]
+
+nrow(cp_otu_P_soil)
+
+tax_P_soil <- tax_P[rownames(cp_otu_P_soil),]
+tax_P_soil$otu <- rownames(tax_P_soil)
+
+design_P_soil <- droplevels(design_P[psoilsamples,])
+
+P_soil_dataset <- microtable$new(sample_table = design_P_soil,
+                                 otu_table = cp_otu_P_soil, 
+                                 tax_table = tax_P_soil)
+
+
+P_soil_lefse <- trans_diff$new(dataset = P_soil_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", 
+                               alpha = 0.05, taxa_level = "otu",
+                               lefse_subgroup = NULL,
+                               p_adjust_method = "none")
+
+P_soil_lefse_plot <- P_soil_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Protist root
+cp_otu_P_root <- cp_otu_P[,rootsamples]
+
+keep_cp_otu_P_root <- which(rowSums(cp_otu_P_root) > 0)
+cp_otu_P_root <- cp_otu_P_root[keep_cp_otu_P_root,]
+
+nrow(cp_otu_P_root)
+
+tax_P_root <- tax_P[rownames(cp_otu_P_root),]
+tax_P_root$otu <- rownames(tax_P_root)
+
+design_P_root <- droplevels(design_P[rootsamples,])
+
+P_root_dataset <- microtable$new(sample_table = design_P_root,
+                                 otu_table = cp_otu_P_root, 
+                                 tax_table = tax_P_root)
+
+
+P_root_lefse <- trans_diff$new(dataset = P_root_dataset, 
+                               method = "lefse", 
+                               group = "Treatment1", taxa_level = "otu",
+                               alpha = 0.01, 
+                               lefse_subgroup = NULL,
+                               p_adjust_method = "none")
+
+P_root_lefse_plot <- P_root_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Protist end
+cp_otu_P_end <- cp_otu_P[,pendsamples]
+
+keep_cp_otu_P_end <- which(rowSums(cp_otu_P_end) > 0)
+cp_otu_P_end <- cp_otu_P_end[keep_cp_otu_P_end,]
+
+nrow(cp_otu_P_end)
+
+tax_P_end <- tax_P[rownames(cp_otu_P_end),]
+tax_P_end$otu <- rownames(tax_P_end)
+
+design_P_end <- droplevels(design_P[pendsamples,])
+
+P_end_dataset <- microtable$new(sample_table = design_P_end,
+                                otu_table = cp_otu_P_end, 
+                                tax_table = tax_P_end)
+
+
+P_end_lefse <- trans_diff$new(dataset = P_end_dataset, 
+                              method = "lefse", 
+                              group = "Treatment1", taxa_level = "otu",
+                              alpha = 0.05, 
+                              lefse_subgroup = NULL,
+                              p_adjust_method = "none")
+
+P_end_lefse_plot <- P_end_lefse$plot_diff_bar(use_number = 1:30, 
+                          width = 0.8, 
+                          group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+
+## Protist film
+cp_otu_P_film <- cp_otu_P[,particlesamples]
+
+keep_cp_otu_P_film <- which(rowSums(cp_otu_P_film) > 0)
+cp_otu_P_film <- cp_otu_P_film[keep_cp_otu_P_film,]
+
+nrow(cp_otu_P_film)
+
+tax_P_film <- tax_P[rownames(cp_otu_P_film),]
+tax_P_film$otu <- rownames(tax_P_film)
+
+design_P_film <- droplevels(design_P[particlesamples,])
+
+P_film_dataset <- microtable$new(sample_table = design_P_film,
+                                 otu_table = cp_otu_P_film, 
+                                 tax_table = tax_P_film)
+
+
+P_film_lefse <- trans_diff$new(dataset = P_film_dataset, 
+                               method = "lefse", taxa_level = "otu",
+                               group = "Treatment1", 
+                               alpha = 0.05, 
+                               lefse_subgroup = NULL)
+
+P_film_lefse_plot <- P_film_lefse$plot_diff_bar(use_number = 1:30, 
+                           width = 0.8, 
+                           group_order = c("CK", "PE", "DE")) +
+  ggsci::scale_color_npg() +
+  ggsci::scale_fill_npg()
+
+
+grid.newpage()
+grid.arrange(B_soil_lefse_plot ,B_root_lefse_plot,B_end_lefse_plot,B_film_lefse_plot,ncol = 4)
+
+grid.newpage()
+grid.arrange(F_soil_lefse_plot ,F_root_lefse_plot,F_end_lefse_plot,F_film_lefse_plot,ncol = 4)
+
+grid.newpage()
+grid.arrange(P_soil_lefse_plot ,P_root_lefse_plot,P_end_lefse_plot,P_film_lefse_plot,ncol = 4)
+                 
